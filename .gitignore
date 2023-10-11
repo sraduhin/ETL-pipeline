@@ -1,0 +1,7 @@
+.env
+commands.txt
+.idea
+__pycache__/
+/db_data
+/static_data
+/venv

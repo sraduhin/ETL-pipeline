@@ -1,5 +1,5 @@
+import logging
 from django.core.management.base import BaseCommand
-
 from movies.management.randomizer import randomize_date
 
 
@@ -9,7 +9,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         db_table = options["table"]
         db_column = options["column"]
-        randomize_date(db_table, db_column)
+        try:
+            randomize_date(db_table, db_column)
+        except Exception as e:
+            logging.error(f"ERROR: {e}")
 
     def add_arguments(self, parser):
         parser.add_argument(

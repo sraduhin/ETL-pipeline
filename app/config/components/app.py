@@ -9,6 +9,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "movies.apps.MoviesConfig",
+    "search.apps.SearchConfig",
     "debug_toolbar",
     "corsheaders",
 ]

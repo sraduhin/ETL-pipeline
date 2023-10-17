@@ -14,6 +14,15 @@ services:
     volumes:
       - ./static_data:/opt/app/static
 
+  esearch:
+    container_name: search
+    image: elasticsearch:${ES_VERSION}
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+
   nginx:
     image: nginx:${NGINX_VERSION}
     container_name: nginx

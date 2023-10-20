@@ -1,7 +1,7 @@
 import psycopg2
 
 from movies.management.utils.consts import DB_CONNECT
-from movies.management.dataclasses import (
+from movies.management.utils.dataclasses import (
     Genre,
     FilmWork,
     Person,

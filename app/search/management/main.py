@@ -1,28 +1,39 @@
-import elasticsearch.helpers
+import contextlib
+
 from elasticsearch import Elasticsearch, helpers
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import Q, functions as f
-from django.db.models.functions import JSONObject
 
 from movies.models import Filmwork, RoleType
 from search.management.utils.consts import MAPPING, HOST
-from search.management.utils.functs import elasticsearch_client
+
+
+@contextlib.contextmanager
+def elasticsearch_conn():
+    conn = Elasticsearch(HOST)
+    yield conn
+    conn.close()
 
 
 class Searcher(object):
     model = Filmwork
+    CHUNK_SIZE = 100
+
+    # def __init__(self):
+    #     self.client = elasticsearch_conn()
 
     def build_index(self, index_name: str):
-        with Elasticsearch(HOST) as client:
+        with elasticsearch_conn() as client:
             client.indices.create(index=index_name, **MAPPING)
             print(f"Index name: \'{index_name}\' has been created")
 
-    def extract(self):
+    def get_queryset(self):
         return self.model.objects.select_related().values(
             "id",
             "rating",
             "title",
-            "description"
+            "description",
+            "modified",
         ).annotate(
             genre=ArrayAgg('genres__name', distinct=True)
         ).annotate(
@@ -49,7 +60,11 @@ class Searcher(object):
                 filter=Q(personfilmwork__role=RoleType.WRITER),
                 distinct=True
             ),
-        )
+        ).order_by('modified')
+
+    def extract(self, chunk: tuple):
+        start, end = chunk
+        return self.get_queryset()[start:end]
 
     def transform(self, index_name: str, data: list):
         transrorm_data = [
@@ -77,15 +92,14 @@ class Searcher(object):
         ]
         return transrorm_data
 
-    def load(self, index_name):
-        data = self.extract()
+    def load(self, index_name, data):
         bulk_data = self.transform(index_name, data)
 
-        with Elasticsearch(HOST) as client:
+        with elasticsearch_conn() as client:
             resp = helpers.bulk(client=client, actions=bulk_data)
             print(resp)
 
     def delete_index(self, index_name):
-        with Elasticsearch(HOST) as client:
+        with elasticsearch_conn() as client:
             client.indices.delete(index=index_name)
             print(f"Index name: \'{index_name}\' has been deleted")

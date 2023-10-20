@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 import logging
 import os
@@ -5,11 +6,10 @@ import psycopg2
 import random
 import sqlite3
 
-from contextlib import contextmanager
 from dataclasses import fields
 
 
-@contextmanager
+@contextlib.contextmanager
 def conn_context(db_path: str):
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row

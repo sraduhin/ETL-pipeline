@@ -3,7 +3,7 @@ services:
   app:
     build: ./app
     container_name: app
-    command: sh -c "uwsgi --strict --ini uwsgi.ini"
+#    command: sh -c "uwsgi --strict --ini uwsgi.ini"
     restart: always
     ports:
       - "8000:8000"

@@ -1,3 +1,6 @@
+from config.components.app import DEBUG
+
+HOST = "http://localhost:9200" if DEBUG else "http://esearch:9200"
 MAPPING = {
   "settings": {
     "refresh_interval": "1s",
@@ -59,49 +62,49 @@ MAPPING = {
             "type":  "keyword"
           }
         }
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "ru_en"
+      },
+      "director": {
+        "type": "text",
+        "analyzer": "ru_en"
+      },
+      "actors_names": {
+        "type": "text",
+        "analyzer": "ru_en"
+      },
+      "writers_names": {
+        "type": "text",
+        "analyzer": "ru_en"
+      },
+      "actors": {
+        "type": "nested",
+        "dynamic": "strict",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "text",
+            "analyzer": "ru_en"
+          }
+        }
+      },
+      "writers": {
+        "type": "nested",
+        "dynamic": "strict",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "text",
+            "analyzer": "ru_en"
+          }
+        }
       }
-      # "description": {
-      #   "type": "text",
-      #   "analyzer": "ru_en"
-      # },
-      # "director": {
-      #   "type": "text",
-      #   "analyzer": "ru_en"
-      # },
-      # "actors_names": {
-      #   "type": "text",
-      #   "analyzer": "ru_en"
-      # },
-      # "writers_names": {
-      #   "type": "text",
-      #   "analyzer": "ru_en"
-      # },
-      # "actors": {
-      #   "type": "nested",
-      #   "dynamic": "strict",
-      #   "properties": {
-      #     "id": {
-      #       "type": "keyword"
-      #     },
-      #     "name": {
-      #       "type": "text",
-      #       "analyzer": "ru_en"
-      #     }
-      #   }
-      # },
-      # "writers": {
-      #   "type": "nested",
-      #   "dynamic": "strict",
-      #   "properties": {
-      #     "id": {
-      #       "type": "keyword"
-      #     },
-      #     "name": {
-      #       "type": "text",
-      #       "analyzer": "ru_en"
-      #     }
-      #   }
-      # }
     }
   }
 }

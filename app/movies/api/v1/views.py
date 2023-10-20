@@ -1,4 +1,5 @@
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.db import models
 from django.http import JsonResponse
 from django.views.generic.detail import BaseDetailView
 from django.views.generic.list import BaseListView
@@ -11,25 +12,33 @@ class MoviesApiMixin:
     http_method_names = ["get"]
 
     def get_queryset(self):
-        return self.model.objects.select_related().values(
+        return self.model.objects.values(
             "id",
             "title",
             "description",
             "creation_date",
             "rating",
             "type",
-        ).annotate(genres=ArrayAgg('genres__name', distinct=True)).filter(
-            personfilmwork__role=RoleType.ACTOR
         ).annotate(
-            actors=ArrayAgg('persons__full_name', distinct=True),
-        ).filter(
-            personfilmwork__role=RoleType.DIRECTOR
+            genres=ArrayAgg('genres__name', distinct=True),
         ).annotate(
-            directors=ArrayAgg('persons__full_name', distinct=True),
-        ).filter(
-            personfilmwork__role=RoleType.WRITER
+            actors=ArrayAgg(
+                'persons__full_name',
+                filter=models.Q(persons__full_name=RoleType.ACTOR),
+                distinct=True,
+            ),
         ).annotate(
-            writers=ArrayAgg('persons__full_name', distinct=True),
+            directors=ArrayAgg(
+                'persons__full_name',
+                filter=models.Q(persons__full_name=RoleType.DIRECTOR),
+                distinct=True,
+            ),
+        ).annotate(
+            writers=ArrayAgg(
+                'persons__full_name',
+                filter=models.Q(persons__full_name=RoleType.WRITER),
+                distinct=True,
+            ),
         )
 
     def render_to_response(self, context, **response_kwargs):

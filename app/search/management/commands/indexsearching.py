@@ -1,7 +1,7 @@
 import logging
 from django.core.management.base import BaseCommand
 
-from search.management.main import Searcher
+from search.management.main import Searcher, build_index
 
 
 class Command(BaseCommand):

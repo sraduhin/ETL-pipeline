@@ -4,7 +4,7 @@ import logging
 from django.core.management.base import BaseCommand
 from elasticsearch import Elasticsearch
 
-from search.management.main import Index, State, Transform, Extract, Load
+from search.main import Index, State, Transform, Extract, Load
 from django.conf import settings
 
 

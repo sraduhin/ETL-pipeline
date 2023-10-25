@@ -1,105 +1,121 @@
-import contextlib
+import json
+import os.path
+from datetime import datetime
 
-from elasticsearch import Elasticsearch, helpers
+from elasticsearch import helpers
+from django.conf import settings
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.db.models import Q, functions as f
+from django.db.models import Q, F, functions as f
 
 from movies.models import Filmwork, RoleType
-from search.management.utils.consts import MAPPING, HOST
+from search.management.schemas import SearchMovie
 
 
-@contextlib.contextmanager
-def elasticsearch_conn():
-    conn = Elasticsearch(HOST)
-    yield conn
-    conn.close()
+class State(object):
+
+    @classmethod
+    def get_state(cls):
+        if os.path.exists(settings.SEARCH_CASH_FILEPATH):
+            with open(settings.SEARCH_CASH_FILEPATH, "r") as f:
+                return datetime.strptime(
+                    json.load(f)["datetime"], settings.SEARCH_CASH_TIME_FORMAT
+                )
+
+    @classmethod
+    def set_state(cls, dt: datetime):
+        with open(settings.SEARCH_CASH_FILEPATH, "w") as f:
+            json.dump(
+                {"datetime": dt.strftime(settings.SEARCH_CASH_TIME_FORMAT)}, f
+            )
+
+    @classmethod
+    def clear_state(cls):
+        os.remove(settings.SEARCH_CASH_FILEPATH)
 
 
-class Searcher(object):
+class Index(object):
     model = Filmwork
-    CHUNK_SIZE = 100
 
-    # def __init__(self):
-    #     self.client = elasticsearch_conn()
+    @staticmethod
+    def build(client, index_name: str):
+        client.indices.create(index=index_name, **settings.SEARCH_MAPPING)
+        print(f"Index name: '{index_name}' has been created")
 
-    def build_index(self, index_name: str):
-        with elasticsearch_conn() as client:
-            client.indices.create(index=index_name, **MAPPING)
-            print(f"Index name: \'{index_name}\' has been created")
+    @staticmethod
+    def delete(client, index_name):
+        client.indices.delete(index=index_name)
+        print(f"Index name: '{index_name}' has been deleted")
+
+
+class Extract(object):
+    model = Filmwork
+
+    def __init__(self, chunk: tuple, state: datetime = None):
+        self.chunk = chunk
+        self.state = state
 
     def get_queryset(self):
-        return self.model.objects.select_related().values(
-            "id",
-            "rating",
-            "title",
-            "description",
-            "modified",
-        ).annotate(
-            genre=ArrayAgg('genres__name', distinct=True)
-        ).annotate(
-            director=ArrayAgg(
-                'persons__full_name',
-                filter=Q(personfilmwork__role=RoleType.DIRECTOR),
-                distinct=True,
-            ),
-        ).annotate(
-            actors=ArrayAgg(
-                f.JSONObject(
-                    id='persons__id',
-                    name='persons__full_name',
+        query = self.model.objects.values(
+                "id",
+                "title",
+                "description",
+                "modified",
+            ).annotate(
+                imdb_rating=F("rating"),
+                genre=ArrayAgg("genres__name", distinct=True),
+                director=ArrayAgg(
+                    "persons__full_name",
+                    filter=Q(personfilmwork__role=RoleType.DIRECTOR),
+                    distinct=True,
                 ),
-                filter=Q(personfilmwork__role=RoleType.ACTOR),
-                distinct=True
-            ),
-        ).annotate(
-            writers=ArrayAgg(
-                f.JSONObject(
-                    id='persons__id',
-                    name='persons__full_name',
+                actors=ArrayAgg(
+                    f.JSONObject(
+                        id="persons__id",
+                        name="persons__full_name",
+                    ),
+                    filter=Q(personfilmwork__role=RoleType.ACTOR),
+                    distinct=True,
                 ),
-                filter=Q(personfilmwork__role=RoleType.WRITER),
-                distinct=True
-            ),
-        ).order_by('modified')
+                writers=ArrayAgg(
+                    f.JSONObject(
+                        id="persons__id",
+                        name="persons__full_name",
+                    ),
+                    filter=Q(personfilmwork__role=RoleType.WRITER),
+                    distinct=True,
+                ),
+            )
+        if self.state:
+            return query.filter(
+                modified__gt=self.state
+            ).order_by("modified")
+        return query.order_by("modified")
 
-    def extract(self, chunk: tuple):
-        start, end = chunk
+    def get_data(self):
+        start, end = self.chunk
         return self.get_queryset()[start:end]
 
-    def transform(self, index_name: str, data: list):
-        transrorm_data = [
+
+class Transform(object):
+
+    @staticmethod
+    def get_bulk(index_name: str, data: list[SearchMovie]):
+        bulk_data = [
             {
                 "_index": index_name,
                 "_op_type": "create",
-                "_id": str(element['id']),
-                "_source": {
-                    'id': str(element['id']),
-                    'title': element['title'],
-                    'imdb_rating': element['rating'],
-                    'description': element['description'],
-                    'genre': element['genre'],
-                    'director': element['director'],
-                    'actors': element['actors'],
-                    'writers': element['writers'],
-                    'actors_names': [
-                        actor['name'] for actor in element['actors']
-                    ],
-                    'writers_names': [
-                        writer['name'] for writer in element['writers']
-                    ],
-                }
-            } for element in data
+                "_id": str(_["id"]),
+                "_source": SearchMovie.transform(_),
+            }
+            for _ in data
         ]
-        return transrorm_data
+        return bulk_data
 
-    def load(self, index_name, data):
-        bulk_data = self.transform(index_name, data)
 
-        with elasticsearch_conn() as client:
-            resp = helpers.bulk(client=client, actions=bulk_data)
-            print(resp)
+class Load(object):
 
-    def delete_index(self, index_name):
-        with elasticsearch_conn() as client:
-            client.indices.delete(index=index_name)
-            print(f"Index name: \'{index_name}\' has been deleted")
+    @staticmethod
+    def load(client, data):
+        resp = helpers.bulk(client=client, actions=data)
+        print(f"{resp[0]} documents has been loaded.")
+

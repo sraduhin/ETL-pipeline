@@ -21,5 +21,5 @@ include(
     "components/database.py",
     "components/locale.py",
     "components/logging.py",
+    "components/search.py",
 )
-

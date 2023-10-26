@@ -2,11 +2,11 @@ import contextlib
 import datetime
 import logging
 import os
-import psycopg2
 import random
 import sqlite3
-
 from dataclasses import fields
+
+import psycopg2
 
 
 @contextlib.contextmanager
@@ -21,7 +21,8 @@ def is_file_exists(func):
     def wrapper(filepath: str):
         if os.path.exists(filepath):
             return func(filepath)
-        logging.error(f"ERROR: \'{filepath}\' doesn't exist.")
+        logging.error(f"ERROR: '{filepath}' doesn't exist.")
+
     return wrapper
 
 

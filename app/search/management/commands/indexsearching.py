@@ -1,11 +1,10 @@
 import contextlib
 import logging
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from elasticsearch import Elasticsearch
-
-from search.main import Index, State, Transform, Extract, Load
-from django.conf import settings
+from search.main import Context, Extract, Index, Load, State, Transform, ModelNames
 
 
 @contextlib.contextmanager
@@ -23,39 +22,45 @@ class Command(BaseCommand):
         index_name = options["index"]
         rebuild = options["rebuild"]
 
-        try:
-            with elasticsearch_conn() as client:
-                if rebuild:
-                    Index.delete(client, index_name)
+        # try:
+        with elasticsearch_conn() as client:
+            if rebuild:
+                Index.delete(client, index_name)
                 Index.build(client, index_name)
+                State.set_default()
 
-                start_index = 0
-                current_state = State.get_state()
+            current_state = State.get_state()
+            films_state = current_state.get(ModelNames.FILMWORK)
 
-                while True:
-                    chunk = start_index, start_index + self.CHUNK_SIZE
+            context = Context.get_films(modified_gt=films_state)
 
-                    extractor = Extract(chunk=chunk, state=current_state)
-                    db_data = extractor.get_data()
-                    if not db_data:
-                        break
+            start_index = 0
+            while True:
+                chunk = start_index, start_index + self.CHUNK_SIZE
 
-                    transformer = Transform()
-                    search_data = transformer.get_bulk(index_name, db_data)
+                extractor = Extract(chunk=chunk, queryset=context)
+                db_data = extractor.get_data()
+                if not db_data:
+                    break
 
-                    loader = Load()
-                    loader.load(client, search_data)
-                    if len(db_data) < self.CHUNK_SIZE:
-                        break
+                transformer = Transform()
+                search_data = transformer.get_bulk(index_name, db_data)
 
-                    State.set_state(db_data[self.CHUNK_SIZE - 1]["modified"])
-                    start_index += self.CHUNK_SIZE
+                loader = Load()
+                loader.load(client, search_data)
 
-                print("All documents are loaded.")
-                State.clear_state()
+                new_state = db_data[len(db_data) - 1]["modified"]
+                State.set_state(**{ModelNames.FILMWORK: new_state})
 
-        except Exception as e:
-            logging.error(f"ERROR: {e}")
+                if len(db_data) < self.CHUNK_SIZE:
+                    break
+
+                start_index += self.CHUNK_SIZE
+
+            print("All documents are loaded.")
+
+        # except Exception as e:
+        #     logging.error(f"ERROR: {e}")
 
     def add_arguments(self, parser):
         parser.add_argument(

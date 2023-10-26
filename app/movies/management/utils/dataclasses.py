@@ -34,14 +34,6 @@ class FilmWork:
 
 
 @dataclass
-class Person:
-    id: uuid.UUID
-    full_name: str
-    created: datetime
-    modified: datetime
-
-
-@dataclass
 class GenreFilmWork:
     id: uuid.UUID
     film_work_id: uuid.UUID

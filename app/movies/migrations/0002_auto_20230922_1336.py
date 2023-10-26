@@ -5,45 +5,70 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('movies', '0001_initial'),
+        ("movies", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='filmwork',
-            name='certificate',
-            field=models.CharField(blank=True, max_length=512, null=True, verbose_name='cerfificate'),
+            model_name="filmwork",
+            name="certificate",
+            field=models.CharField(
+                blank=True, max_length=512, null=True, verbose_name="cerfificate"
+            ),
         ),
         migrations.AlterField(
-            model_name='filmwork',
-            name='creation_date',
-            field=models.DateField(blank=True, null=True, verbose_name='creation_date'),
+            model_name="filmwork",
+            name="creation_date",
+            field=models.DateField(blank=True, null=True, verbose_name="creation_date"),
         ),
         migrations.AlterField(
-            model_name='filmwork',
-            name='description',
-            field=models.TextField(blank=True, null=True, verbose_name='description'),
+            model_name="filmwork",
+            name="description",
+            field=models.TextField(blank=True, null=True, verbose_name="description"),
         ),
         migrations.AlterField(
-            model_name='filmwork',
-            name='rating',
-            field=models.FloatField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)], verbose_name='rating'),
+            model_name="filmwork",
+            name="rating",
+            field=models.FloatField(
+                blank=True,
+                null=True,
+                validators=[
+                    django.core.validators.MinValueValidator(0),
+                    django.core.validators.MaxValueValidator(100),
+                ],
+                verbose_name="rating",
+            ),
         ),
         migrations.AlterField(
-            model_name='filmwork',
-            name='type',
-            field=models.CharField(choices=[('movie', 'movie'), ('tv_show', 'tv_show')], default='movie', max_length=7, verbose_name='type'),
+            model_name="filmwork",
+            name="type",
+            field=models.CharField(
+                choices=[("movie", "movie"), ("tv_show", "tv_show")],
+                default="movie",
+                max_length=7,
+                verbose_name="type",
+            ),
         ),
         migrations.AlterField(
-            model_name='person',
-            name='gender',
-            field=models.TextField(choices=[('male', 'male'), ('female', 'female')], null=True, verbose_name='gender'),
+            model_name="person",
+            name="gender",
+            field=models.TextField(
+                choices=[("male", "male"), ("female", "female")],
+                null=True,
+                verbose_name="gender",
+            ),
         ),
         migrations.AlterField(
-            model_name='personfilmwork',
-            name='role',
-            field=models.TextField(choices=[('actor', 'actor'), ('director', 'director'), ('writer', 'writer')], verbose_name='role'),
+            model_name="personfilmwork",
+            name="role",
+            field=models.TextField(
+                choices=[
+                    ("actor", "actor"),
+                    ("director", "director"),
+                    ("writer", "writer"),
+                ],
+                verbose_name="role",
+            ),
         ),
     ]

@@ -1,4 +1,5 @@
 import logging
+
 from django.core.management.base import BaseCommand
 from movies.management.randomizer import randomize_date
 

@@ -1,6 +1,5 @@
 from config.components.database import DATABASES
 
-
 DB_CONNECT = {
     "dbname": DATABASES["default"]["NAME"],
     "user": DATABASES["default"]["USER"],

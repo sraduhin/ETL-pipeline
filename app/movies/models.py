@@ -51,7 +51,6 @@ class Genre(UUIDMixin, TimeStampedMixin):
 
 
 class Person(UUIDMixin, TimeStampedMixin):
-
     full_name = models.TextField(_("full_name"), max_length=255)
     gender = models.TextField(_("gender"), choices=GenderType.choices, null=True)
 
@@ -84,7 +83,6 @@ class PersonFilmwork(UUIDMixin):
 
 
 class Filmwork(UUIDMixin, TimeStampedMixin):
-
     title = models.TextField(_("title"), null=False)
     description = models.TextField(_("description"), blank=True, null=True)
     creation_date = models.DateField(_("creation_date"), blank=True, null=True)

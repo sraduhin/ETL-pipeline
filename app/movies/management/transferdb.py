@@ -1,19 +1,11 @@
 import psycopg2
-
 from movies.management.utils.consts import DB_CONNECT
-from movies.management.utils.dataclasses import (
-    Genre,
-    FilmWork,
-    Person,
-    GenreFilmWork,
-    PersonFilmWork,
-)
-from movies.management.utils.functs import (
-    conn_context,
-    is_file_exists,
-    get_data_from_sqlite,
-    load_data_to_postgres,
-)
+from movies.management.utils.dataclasses import (FilmWork, Genre,
+                                                 GenreFilmWork, Person,
+                                                 PersonFilmWork)
+from movies.management.utils.functs import (conn_context, get_data_from_sqlite,
+                                            is_file_exists,
+                                            load_data_to_postgres)
 
 TABLES_WITH_DATACLASSESS = [
     ("genre", Genre),

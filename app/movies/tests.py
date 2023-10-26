@@ -1,10 +1,7 @@
 from django.test import TestCase
-
 from movies.management.commands.populatedb import DB_CONNECT
-from movies.management.transferdb import (
-    TABLES_WITH_DATACLASSESS,
-    transfer_db_from_sql_to_postgres,
-)
+from movies.management.transferdb import (TABLES_WITH_DATACLASSESS,
+                                          transfer_db_from_sql_to_postgres)
 from movies.management.utils import conn_context
 
 from .models import Filmwork, Genre, GenreFilmwork, Person, PersonFilmwork

@@ -1,6 +1,6 @@
 from config.components.app import DEBUG
 
-SEARCH_STATE_FILEPATH = "cashloader.json"
+SEARCH_STATE_FILEPATH = "cacheloader.json"
 SEARCH_STATE_TIME_FORMAT = "%Y, %m, %d %H:%M:%S:%f"
 
 SEARCH_HOST = "http://localhost:9200" if DEBUG else "http://esearch:9200"

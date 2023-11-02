@@ -1,5 +1,9 @@
 import json
 import os.path
+
+import backoff
+import elastic_transport
+
 from dataclasses import dataclass, fields
 from datetime import datetime
 
@@ -77,6 +81,12 @@ class Index(object):
         client.indices.delete(index=index)
         print(f"Index name: '{index}' has been deleted")
 
+    @backoff.on_exception(backoff.expo,
+                          elastic_transport.ConnectionError,
+                          on_giveup=print(
+                              ">>>> Giving up fater multiple failures..."
+                          ),
+                          max_tries=3)
     @staticmethod
     def is_exists(index, client):
         check_index = client.indices.exists(index=index)

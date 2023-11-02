@@ -1,3 +1,4 @@
+import backoff
 import contextlib
 from django.conf import settings
 from elasticsearch import Elasticsearch
@@ -6,7 +7,12 @@ from search.classes import (Context, Extract, Index, Load, State, Transform,
 
 CHUNK_SIZE = 1000
 
+import elastic_transport
 
+
+@backoff.on_exception(backoff.expo,
+                      elastic_transport.ConnectionError,
+                      max_tries=7)
 @contextlib.contextmanager
 def elasticsearch_conn():
     conn = Elasticsearch(settings.SEARCH_HOST)
@@ -17,7 +23,7 @@ def elasticsearch_conn():
 def run_pipeline(index: str, rebuild: bool):
 
     with elasticsearch_conn() as client:
-        if rebuild:
+        if rebuild or not Index.is_exists(index, client):
             # building index from zero
             Index.rebuild(index, client)
 

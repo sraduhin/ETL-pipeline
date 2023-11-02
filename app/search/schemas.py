@@ -13,7 +13,7 @@ class SearchPerson(BaseModel):
     name: str
 
 
-class SearchMovie(BaseModel):
+class SearchMovie(BaseModel):  # wtf
     id: uuid.UUID
     rating: int
     title: str

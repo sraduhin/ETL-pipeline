@@ -62,7 +62,7 @@ class Index(object):
 
     @classmethod
     def rebuild(cls, index, client):
-        if cls._is_exists(index, client):
+        if cls.is_exists(index, client):
             cls._delete(index, client)
         cls._build(index, client)
         State.set_default()
@@ -78,7 +78,7 @@ class Index(object):
         print(f"Index name: '{index}' has been deleted")
 
     @staticmethod
-    def _is_exists(index, client):
+    def is_exists(index, client):
         check_index = client.indices.exists(index=index)
         if check_index.body:
             return True

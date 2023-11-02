@@ -1,4 +1,10 @@
+import sys
+
+import backoff
 import contextlib
+
+import django.db.utils
+import elastic_transport
 from django.conf import settings
 from elasticsearch import Elasticsearch
 from search.classes import (Context, Extract, Index, Load, State, Transform,
@@ -7,16 +13,35 @@ from search.classes import (Context, Extract, Index, Load, State, Transform,
 CHUNK_SIZE = 1000
 
 
-@contextlib.contextmanager
-def elasticsearch_conn():
-    conn = Elasticsearch(settings.SEARCH_HOST)
-    yield conn
-    conn.close()
+def _giveup(e):
+    print("\n >>>> Giving up after multiple failures...")
+    sys.exit(-1)
 
 
+def _backoff(details):
+    print("\n >>>> Failed connection. Reconnecting...")
+    # sys.exit(-1)
+
+
+@backoff.on_exception(backoff.expo,
+                      django.db.utils.OperationalError,
+                      on_giveup=_giveup,
+                      on_backoff=_backoff,
+                      max_tries=5,
+                      jitter=backoff.random_jitter,
+                      max_time=16,
+                      )
+@backoff.on_exception(backoff.expo,
+                      elastic_transport.ConnectionError,
+                      on_giveup=_giveup,
+                      on_backoff=_backoff,
+                      max_tries=5,
+                      jitter=backoff.random_jitter,
+                      max_time=16,
+                      )
 def run_pipeline(index: str, rebuild: bool):
 
-    with elasticsearch_conn() as client:
+    with Elasticsearch(settings.SEARCH_HOST) as client:
         if rebuild or not Index.is_exists(index, client):
             # building index from zero
             Index.rebuild(index, client)

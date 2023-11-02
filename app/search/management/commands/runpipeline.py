@@ -1,20 +1,6 @@
-import argparse
-import contextlib
 import logging
-from django.conf import settings
 from django.core.management.base import BaseCommand
-from elasticsearch import Elasticsearch
-
-from search.classes import (Context, Extract, Index, Load, State, Transform,
-                            ModelNames)
 from search.pipeline import run_pipeline
-
-
-@contextlib.contextmanager
-def elasticsearch_conn():
-    conn = Elasticsearch(settings.SEARCH_HOST)
-    yield conn
-    conn.close()
 
 
 class Command(BaseCommand):

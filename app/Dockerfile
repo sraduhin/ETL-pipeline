@@ -7,7 +7,8 @@ COPY requirements.txt requirements.txt
 COPY uwsgi/uwsgi.ini uwsgi.ini
 
 RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
+    && pip install -r requirements.txt \
+#    && apt-get update && apt-get install -y cron
 
 COPY . .
 

@@ -1,3 +1,4 @@
+backoff==2.2.1
 django==3.2
 #django==4.2.6
 django-cors-headers==4.2.0

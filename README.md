@@ -1,5 +1,13 @@
 # ETL pipeline
-From postgres to elastic-search
+Writing ETL with
+* django
+* postgres
+* docker
+* nginx
+* elasticsearch
+* swagger
+
+... and still writing
 
 # Setup
 Run in a docker (Debug=False).

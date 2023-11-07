@@ -18,6 +18,7 @@ load_dotenv()
 include(
     "components/app.py",
     "components/auth.py",
+    "components/celery.py",
     "components/database.py",
     "components/locale.py",
     "components/logging.py",

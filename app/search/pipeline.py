@@ -20,7 +20,6 @@ def _giveup(e):
 
 def _backoff(details):
     print("\n >>>> Failed connection. Reconnecting...")
-    # sys.exit(-1)
 
 
 @backoff.on_exception(backoff.expo,

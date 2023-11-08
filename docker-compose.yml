@@ -1,10 +1,12 @@
 version: '3'
 services:
   app:
-    build: ./app
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
     container_name: app
+    command: /entrypoint.sh
 #    command: sh -c "uwsgi --strict --ini uwsgi.ini"
-    command: sh -c "entrypoint.sh"
     restart: always
     ports:
       - "8000:8000"
@@ -13,11 +15,38 @@ services:
         condition: service_healthy
     env_file: .env
     volumes:
-      - ./app:/app
-      - ./local/static:/app/static
+      - ./app:/opt/app
+
+  redis:
+    image: redis:${REDIS_VERSION}
+    container_name: redis
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    container_name: worker
+    command: /celeryworker.sh
+    volumes:
+      - ./app:/opt/app
+    depends_on:
+      - redis
+      - app
+
+  celery_beater:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    container_name: beater
+    command: /celerybeater.sh
+    volumes:
+      - ./app:/opt/app
+    depends_on:
+      - redis
+      - app
 
   esearch:
-    container_name: search
+    container_name: esearch
     image: elasticsearch:${ES_VERSION}
     environment:
       - discovery.type=single-node
@@ -29,9 +58,9 @@ services:
     image: nginx:${NGINX_VERSION}
     container_name: nginx
     volumes:
-      - ./static_data:/static
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./app/static:/static
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:
       - app
     ports:
@@ -51,8 +80,4 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./db_data:/var/lib/postgresql/data
-
-volumes:
-  static_data:
-
+      - ./docker/db_data:/var/lib/postgresql/data

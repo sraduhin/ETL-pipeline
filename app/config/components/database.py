@@ -4,7 +4,7 @@ import os
 
 from config.components.app import DEBUG
 
-HOST = os.environ.get("POSTGRES_HOST", "127.0.0.1") if DEBUG else "DB"
+HOST = os.environ.get("POSTGRES_HOST", "127.0.0.1") if DEBUG else "db"
 
 DATABASES = {
     "default": {

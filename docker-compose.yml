@@ -4,6 +4,7 @@ services:
     build: ./app
     container_name: app
 #    command: sh -c "uwsgi --strict --ini uwsgi.ini"
+    command: sh -c "entrypoint.sh"
     restart: always
     ports:
       - "8000:8000"
@@ -12,7 +13,8 @@ services:
         condition: service_healthy
     env_file: .env
     volumes:
-      - ./static_data:/opt/app/static
+      - ./app:/app
+      - ./local/static:/app/static
 
   esearch:
     container_name: search

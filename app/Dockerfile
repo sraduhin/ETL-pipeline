@@ -1,18 +1,13 @@
 FROM python:3.10
 
-WORKDIR /opt/app
-ENV DJANGO_SETTING_MODULE 'config.settings'
+WORKDIR /app
+
+RUN pip install --upgrade pip
 
 COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
 
-RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
-
-COPY . .
-
-COPY uwsgi/uwsgi.ini uwsgi.ini
-COPY docker-entrypoint.sh /usr/bin
-COPY supervisor.conf /usr/local/etc/supervisord.conf
+COPY ./local/uwsgi/uwsgi.ini uwsgi.ini
 
 ENTRYPOINT ["supervisord"]
 #CMD python3 manage.py runserver

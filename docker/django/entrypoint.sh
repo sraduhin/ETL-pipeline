@@ -1,6 +1,10 @@
 #!/bin/bash
 
+echo " >>>> Collecting static"
 python3 manage.py collectstatic --no-input
+
+echo " >>>> Running migrations"
 python3 manage.py migrate
-#python3 manage.py runserver
-uwsgi --strict --ini /uwsgi.ini
+
+echo " >>>> Running server"
+uwsgi --strict --ini uwsgi.ini

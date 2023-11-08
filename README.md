@@ -10,7 +10,7 @@ Writing ETL with
 ... and still writing
 
 # Setup
-Run in a docker (Debug=False).
+Run in a docker.
 
 run commands
 ```

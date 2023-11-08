@@ -27,6 +27,7 @@ services:
       dockerfile: ./docker/Dockerfile
     container_name: worker
     command: /celeryworker.sh
+    env_file: .env
     volumes:
       - ./app:/opt/app
     depends_on:

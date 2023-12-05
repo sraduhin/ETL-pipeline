@@ -15,85 +15,10 @@ from django.db.models import Q, F, functions as f
 
 from movies.models import Filmwork, RoleType, Genre, Person
 from search.schemas import SearchMovie
+from search.state import State
 
 
-@dataclass
-class ModelNames:
-    FILMWORK: str = "filmwork"
-    GENRE: str = "genre"
-    PERSON: str = "person"
-
-
-class State(object):
-    @classmethod
-    def get_state(cls):
-        if os.path.exists(settings.SEARCH_STATE_FILEPATH):
-            state = cls._read_state()
-            formatted_state = {
-                key: datetime.strptime(value, settings.SEARCH_STATE_TIME_FORMAT)
-                if value
-                else None
-                for key, value in state.items()
-            }
-            return formatted_state
-        cls.set_default()
-
-    @classmethod
-    def set_state(cls, **kwargs):
-        current_state = cls._read_state()
-        with open(settings.SEARCH_STATE_FILEPATH, "w") as f:
-            updated_states = {
-                key: value.strftime(settings.SEARCH_STATE_TIME_FORMAT)
-                for key, value in kwargs.items()
-                if value is not None
-            }
-            current_state.update(**updated_states)
-            json.dump(current_state, f)
-
-    @staticmethod
-    def set_default():
-        with open(settings.SEARCH_STATE_FILEPATH, "w") as f:
-            template = {field.default: None for field in fields(ModelNames)}
-            json.dump(template, f)
-
-    @staticmethod
-    def _read_state():
-        with open(settings.SEARCH_STATE_FILEPATH, "r") as f:
-            return json.load(f)
-
-
-class Index(object):
-
-    @classmethod
-    def rebuild(cls, index, client):
-        if cls.is_exists(index, client):
-            cls._delete(index, client)
-        cls._build(index, client)
-        State.set_default()
-
-    @staticmethod
-    def _build(index, client):
-        client.indices.create(index=index, **settings.SEARCH_MAPPING)
-        print(f"Index name: '{index}' has been created")
-
-    @staticmethod
-    def _delete(index, client):
-        client.indices.delete(index=index)
-        print(f"Index name: '{index}' has been deleted")
-
-
-    @staticmethod
-    def is_exists(index, client):
-        check_index = client.indices.exists(index=index)
-        if check_index.body:
-            return True
-
-
-class Extract(object):
-    @staticmethod
-    def _old(chunk, queryset):
-        start, end = chunk
-        return queryset[start:end]
+class PostgresExtractor(object):
 
     @staticmethod
     def get_data(queryset, chunk_size):
@@ -102,7 +27,7 @@ class Extract(object):
             yield paginator.page(page).object_list
 
 
-class Context(object):
+class PostgresContext(object):
     class Model:
         FILMWORK = Filmwork
         GENRE = Genre
@@ -163,7 +88,7 @@ class Context(object):
         )
 
 
-class Transform(object):
+class DataTransform(object):
     @staticmethod
     def get_bulk(index_name: str, data: list[SearchMovie]):
         bulk_data = [
@@ -178,7 +103,7 @@ class Transform(object):
         return bulk_data
 
 
-class Load(object):
+class ElasticSearchLoader(object):
     @staticmethod
     def load(client, data):
         resp = helpers.bulk(client=client, actions=data)

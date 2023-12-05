@@ -1,8 +1,16 @@
 import uuid
+from dataclasses import dataclass
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+
+@dataclass
+class ModelNames:
+    FILMWORK: str = "filmwork"
+    GENRE: str = "genre"
+    PERSON: str = "person"
 
 
 class FilmworkType(models.TextChoices):

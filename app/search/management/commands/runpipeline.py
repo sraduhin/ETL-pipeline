@@ -1,6 +1,6 @@
 import logging
 from django.core.management.base import BaseCommand
-from search.pipeline import run_pipeline
+from search.run import run_pipeline
 
 
 class Command(BaseCommand):
@@ -12,10 +12,10 @@ class Command(BaseCommand):
         index_name = options["index"]
         rebuild = options["rebuild"]
 
-        try:
-            run_pipeline(index_name, rebuild)
-        except Exception as e:
-            logging.error(f"ERROR: {e}")
+        # try:
+        run_pipeline(index_name, rebuild)
+        # except Exception as e:
+        #     logging.error(f"ERROR: {e}")
 
     def add_arguments(self, parser):
         parser.add_argument(
